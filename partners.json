@@ -1,0 +1,42 @@
+[
+  {
+    "uuid": "123e4567-e89b-12d3-a456-426655440000",
+    "name": "DSP Alpha",
+    "endpoint": "http://localhost:9003/bid",
+    "is_enabled": true,
+    "countries": ["RU", "KZ"],
+    "device_types": ["mobile", "desktop"],
+    "min_bid_floor": 0.5,
+    "blocked_categories": ["gambling"]
+  },
+  {
+    "uuid": "223e4567-e89b-12d3-a456-426655440001",
+    "name": "DSP Beta",
+    "endpoint": "http://localhost:9002/bid",
+    "is_enabled": true,
+    "countries": [],
+    "device_types": ["mobile"],
+    "min_bid_floor": 1.0,
+    "blocked_categories": []
+  },
+  {
+    "uuid": "323e4567-e89b-12d3-a456-426655440002",
+    "name": "DSP Gamma",
+    "endpoint": "http://localhost:9003/bid",
+    "is_enabled": true,
+    "countries": ["RU", "US", "DE"],
+    "device_types": [],
+    "min_bid_floor": 0.5,
+    "blocked_categories": ["news"]
+  },
+  {
+    "uuid": "423e4567-e89b-12d3-a456-426655440003",
+    "name": "DSP Delta",
+    "endpoint": "http://localhost:9004/bid",
+    "is_enabled": false,
+    "countries": ["RU"],
+    "device_types": ["mobile"],
+    "min_bid_floor": 0,
+    "blocked_categories": []
+  }
+]
