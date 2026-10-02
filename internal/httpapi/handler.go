@@ -4,7 +4,9 @@ import (
 	"adex/internal/domain"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"mime"
 	"net/http"
 )
 
@@ -29,7 +31,8 @@ func (h *Handler) HandleAuction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Header.Get("Content-Type") != "application/json" {
+	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil || mediaType != "application/json" {
 		http.Error(w, "content-type должен быть application/json", http.StatusUnsupportedMediaType)
 		return
 	}
@@ -39,6 +42,11 @@ func (h *Handler) HandleAuction(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&auctionRequest); err != nil {
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			http.Error(w, "тело запроса слишком большое", http.StatusRequestEntityTooLarge)
+			return
+		}
 		http.Error(w, "json невалиден", http.StatusBadRequest)
 		return
 	}

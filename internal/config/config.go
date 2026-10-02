@@ -16,9 +16,14 @@ type Config struct {
 }
 
 func Load() (Config, error) {
+
 	auctionTimeout, err := getDuration("AUCTION_TIMEOUT", 200*time.Millisecond)
 	if err != nil {
 		return Config{}, err
+	}
+
+	if auctionTimeout <= 0 {
+		return Config{}, fmt.Errorf("AUCTION_TIMEOUT должен быть больше 0, получено %s", auctionTimeout)
 	}
 
 	dspTimeout, err := getDuration("DSP_TIMEOUT", 3*time.Second)
@@ -26,9 +31,17 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 
+	if dspTimeout <= 0 {
+		return Config{}, fmt.Errorf("DSP_TIMEOUT должен быть больше 0, получено %s", dspTimeout)
+	}
+
 	maxConcurrency, err := getInt("MAX_CONCURRENCY", 50)
 	if err != nil {
 		return Config{}, err
+	}
+
+	if maxConcurrency <= 0 {
+		return Config{}, fmt.Errorf("MAX_CONCURRENCY должен быть больше 0, получено %d", maxConcurrency)
 	}
 
 	return Config{

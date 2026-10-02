@@ -39,10 +39,10 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	log.Println("adex: listening on :8080")
+	log.Println("adex: listening on", cfg.Addr)
 
 	srv := &http.Server{
-		Addr:         ":8080",
+		Addr:         cfg.Addr,
 		Handler:      mux,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
