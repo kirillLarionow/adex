@@ -24,7 +24,21 @@ func (h *Handler) HandleAuction(w http.ResponseWriter, r *http.Request) {
 
 	var auctionRequest domain.AuctionRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&auctionRequest); err != nil {
+	if r.Method != http.MethodPost {
+		http.Error(w, "метод не подходит", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "content-type должен быть application/json", http.StatusUnsupportedMediaType)
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&auctionRequest); err != nil {
 		http.Error(w, "json невалиден", http.StatusBadRequest)
 		return
 	}
