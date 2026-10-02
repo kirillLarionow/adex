@@ -6,16 +6,27 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"time"
 )
 
 type HTTPClient struct {
 	client *http.Client
 }
 
-func NewHttpClient() *HTTPClient {
+func NewHttpClient(timeout time.Duration) *HTTPClient {
+	transport := &http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 20,
+		IdleConnTimeout:     90 * time.Second,
+	}
+
 	return &HTTPClient{
-		client: &http.Client{},
+		client: &http.Client{
+			Timeout:   timeout,
+			Transport: transport,
+		},
 	}
 }
 
@@ -44,7 +55,10 @@ func (c *HTTPClient) SendRequest(ctx context.Context, endpoint string, req domai
 		return fmt.Errorf("ошибка response %w", err)
 	}
 
-	defer response.Body.Close()
+	defer func() {
+		io.Copy(io.Discard, response.Body)
+		response.Body.Close()
+	}()
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("ошибка StatusCode %d", response.StatusCode)
