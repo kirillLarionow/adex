@@ -2,6 +2,7 @@ package main
 
 import (
 	"adex/internal/auction"
+	"adex/internal/config"
 	"adex/internal/dsp"
 	"adex/internal/httpapi"
 	"adex/internal/partner"
@@ -15,14 +16,20 @@ import (
 )
 
 func main() {
-	repo, err := partner.NewRepository("partners.json")
+	cfg, err := config.Load()
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client := dsp.NewHttpClient()
+	repo, err := partner.NewRepository(cfg.PartnersPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	service := auction.NewService(repo, client)
+	client := dsp.NewHttpClient(cfg.DSPTimeout)
+
+	service := auction.NewService(repo, client, cfg.AuctionTimeout, cfg.MaxConcurrency)
 
 	handler := httpapi.NewHandler(service)
 
@@ -35,8 +42,11 @@ func main() {
 	log.Println("adex: listening on :8080")
 
 	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
+		Addr:         ":8080",
+		Handler:      mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	go func() {

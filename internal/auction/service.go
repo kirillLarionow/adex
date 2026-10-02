@@ -18,14 +18,22 @@ type DSPClient interface {
 }
 
 type Service struct {
-	partners  PartnerListner
-	dspClient DSPClient
+	partners       PartnerListner
+	dspClient      DSPClient
+	auctionTimeout time.Duration
+	maxConcurrency int
 }
 
-func NewService(partners PartnerListner, dspClient DSPClient) *Service {
+func NewService(
+	partners PartnerListner,
+	dspClient DSPClient,
+	auctionTimeout time.Duration,
+	maxConcurrency int) *Service {
 	return &Service{
-		partners:  partners,
-		dspClient: dspClient,
+		partners:       partners,
+		dspClient:      dspClient,
+		auctionTimeout: auctionTimeout,
+		maxConcurrency: maxConcurrency,
 	}
 }
 
@@ -73,6 +81,7 @@ func (s *Service) sendToPartners(
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
+	sem := make(chan struct{}, 50)
 
 	succeeded := 0
 
@@ -82,6 +91,13 @@ func (s *Service) sendToPartners(
 
 		go func(domainPartner domain.Partner) {
 			defer wg.Done()
+
+			select {
+			case sem <- struct{}{}:
+			case <-ctx.Done():
+			}
+
+			defer func() { <-sem }()
 
 			if err := s.dspClient.SendRequest(
 				ctx,
