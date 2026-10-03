@@ -112,7 +112,7 @@ func TestHandleAuction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			runner := &fakeRunner{}
-			handler := NewHandler(runner)
+			handler := NewHandler(runner, 1<<20)
 			req := httptest.NewRequest(tt.method, "/auction", strings.NewReader(tt.body))
 			if tt.contentType != "" {
 				req.Header.Set("Content-Type", tt.contentType)

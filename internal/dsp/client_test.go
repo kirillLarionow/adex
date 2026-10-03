@@ -28,7 +28,7 @@ func TestSendRequest_OK(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewHttpClient(time.Second)
+	client := NewHttpClient(time.Second, 10, 10)
 	req := domain.AuctionRequest{RequestID: "req-1", Country: "RU"}
 
 	if err := client.SendRequest(context.Background(), server.URL, req); err != nil {
@@ -46,7 +46,7 @@ func TestSendRequest_Non200(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewHttpClient(time.Second)
+	client := NewHttpClient(time.Second, 10, 10)
 
 	if err := client.SendRequest(context.Background(), server.URL, domain.AuctionRequest{}); err == nil {
 		t.Fatal("ожидалась ошибка на статус 500, получили nil")
@@ -63,7 +63,7 @@ func TestSendRequest_ContextTimeout(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewHttpClient(time.Second)
+	client := NewHttpClient(time.Second, 10, 10)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
