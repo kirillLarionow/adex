@@ -15,11 +15,12 @@ type AuctionRunner interface {
 }
 
 type Handler struct {
-	service AuctionRunner
+	service      AuctionRunner
+	maxBodyBytes int64
 }
 
-func NewHandler(service AuctionRunner) *Handler {
-	return &Handler{service: service}
+func NewHandler(service AuctionRunner, maxBodyBytes int64) *Handler {
+	return &Handler{service: service, maxBodyBytes: maxBodyBytes}
 }
 
 func (h *Handler) HandleAuction(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +38,7 @@ func (h *Handler) HandleAuction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	r.Body = http.MaxBytesReader(w, r.Body, h.maxBodyBytes)
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()

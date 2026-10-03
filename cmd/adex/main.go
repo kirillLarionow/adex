@@ -27,11 +27,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	client := dsp.NewHttpClient(cfg.DSPTimeout)
+	client := dsp.NewHttpClient(cfg.DSPTimeout, cfg.DSPMaxIdleConns, cfg.DSPMaxIdleConnsPerHost)
 
 	service := auction.NewService(repo, client, cfg.AuctionTimeout, cfg.MaxConcurrency)
 
-	handler := httpapi.NewHandler(service)
+	handler := httpapi.NewHandler(service, cfg.MaxBodyBytes)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/auction", handler.HandleAuction)
@@ -44,9 +44,9 @@ func main() {
 	srv := &http.Server{
 		Addr:         cfg.Addr,
 		Handler:      mux,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		IdleTimeout:  cfg.IdleTimeout,
 	}
 
 	go func() {

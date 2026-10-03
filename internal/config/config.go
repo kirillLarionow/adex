@@ -12,44 +12,58 @@ type Config struct {
 	PartnersPath   string
 	AuctionTimeout time.Duration
 	MaxConcurrency int
-	DSPTimeout     time.Duration
+
+	DSPTimeout             time.Duration
+	DSPMaxIdleConns        int
+	DSPMaxIdleConnsPerHost int
+
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	IdleTimeout  time.Duration
+	MaxBodyBytes int64
 }
 
 func Load() (Config, error) {
-	auctionTimeout, err := getDuration("AUCTION_TIMEOUT", 200*time.Millisecond)
-	if err != nil {
+	var cfg Config
+	var err error
+
+	cfg.Addr = getString("ADDR", ":8080")
+	cfg.PartnersPath = getString("PARTNERS_PATH", "partners.json")
+
+	if cfg.AuctionTimeout, err = getDuration("AUCTION_TIMEOUT", 200*time.Millisecond); err != nil {
+		return Config{}, err
+	}
+	if cfg.MaxConcurrency, err = getInt("MAX_CONCURRENCY", 50); err != nil {
 		return Config{}, err
 	}
 
-	if auctionTimeout <= 0 {
-		return Config{}, fmt.Errorf("AUCTION_TIMEOUT должен быть больше 0, получено %s", auctionTimeout)
+	if cfg.DSPTimeout, err = getDuration("DSP_TIMEOUT", 3*time.Second); err != nil {
+		return Config{}, err
 	}
-
-	dspTimeout, err := getDuration("DSP_TIMEOUT", 3*time.Second)
-	if err != nil {
+	if cfg.DSPMaxIdleConns, err = getInt("DSP_MAX_IDLE_CONNS", 100); err != nil {
+		return Config{}, err
+	}
+	if cfg.DSPMaxIdleConnsPerHost, err = getInt("DSP_MAX_IDLE_CONNS_PER_HOST", 20); err != nil {
 		return Config{}, err
 	}
 
-	if dspTimeout <= 0 {
-		return Config{}, fmt.Errorf("DSP_TIMEOUT должен быть больше 0, получено %s", dspTimeout)
+	if cfg.ReadTimeout, err = getDuration("READ_TIMEOUT", 5*time.Second); err != nil {
+		return Config{}, err
 	}
-
-	maxConcurrency, err := getInt("MAX_CONCURRENCY", 50)
-	if err != nil {
+	if cfg.WriteTimeout, err = getDuration("WRITE_TIMEOUT", 10*time.Second); err != nil {
+		return Config{}, err
+	}
+	if cfg.IdleTimeout, err = getDuration("IDLE_TIMEOUT", 60*time.Second); err != nil {
 		return Config{}, err
 	}
 
-	if maxConcurrency <= 0 {
-		return Config{}, fmt.Errorf("MAX_CONCURRENCY должен быть больше 0, получено %d", maxConcurrency)
+	maxBody, err := getInt("MAX_BODY_BYTES", 1<<20)
+	if err != nil {
+		return Config{}, err
 	}
+	cfg.MaxBodyBytes = int64(maxBody)
 
-	return Config{
-		Addr:           getString("ADDR", ":8080"),
-		PartnersPath:   getString("PARTNERS_PATH", "partners.json"),
-		AuctionTimeout: auctionTimeout,
-		MaxConcurrency: maxConcurrency,
-		DSPTimeout:     dspTimeout,
-	}, nil
+	return cfg, nil
 }
 
 func getString(key, def string) string {
@@ -68,6 +82,9 @@ func getDuration(key string, def time.Duration) (time.Duration, error) {
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", key, err)
 	}
+	if d <= 0 {
+		return 0, fmt.Errorf("%s должен быть больше 0, получено %s", key, d)
+	}
 	return d, nil
 }
 
@@ -79,6 +96,9 @@ func getInt(key string, def int) (int, error) {
 	n, err := strconv.Atoi(v)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", key, err)
+	}
+	if n <= 0 {
+		return 0, fmt.Errorf("%s должен быть больше 0, получено %d", key, n)
 	}
 	return n, nil
 }

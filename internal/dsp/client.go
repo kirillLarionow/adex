@@ -15,10 +15,10 @@ type HTTPClient struct {
 	client *http.Client
 }
 
-func NewHttpClient(timeout time.Duration) *HTTPClient {
+func NewHttpClient(timeout time.Duration, maxIdleConns, maxIdleConnsPerHost int) *HTTPClient {
 	transport := &http.Transport{
-		MaxIdleConns:        100,
-		MaxIdleConnsPerHost: 20,
+		MaxIdleConns:        maxIdleConns,
+		MaxIdleConnsPerHost: maxIdleConnsPerHost,
 		IdleConnTimeout:     90 * time.Second,
 	}
 
