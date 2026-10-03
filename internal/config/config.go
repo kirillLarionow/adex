@@ -16,7 +16,6 @@ type Config struct {
 }
 
 func Load() (Config, error) {
-
 	auctionTimeout, err := getDuration("AUCTION_TIMEOUT", 200*time.Millisecond)
 	if err != nil {
 		return Config{}, err

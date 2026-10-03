@@ -75,13 +75,13 @@ func (s *Service) sendToPartners(
 	auctionRequest domain.AuctionRequest,
 	matcheds []domain.Partner) int {
 
-	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*200)
+	ctx, cancel := context.WithTimeout(ctx, s.auctionTimeout)
 
 	defer cancel()
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	sem := make(chan struct{}, 50)
+	sem := make(chan struct{}, s.maxConcurrency)
 
 	succeeded := 0
 
